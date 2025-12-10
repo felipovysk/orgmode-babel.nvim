@@ -371,7 +371,7 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output =  = vim.system(cmd, { text = true, env = M._env }):wait().stdout
+	local output = vim.system(cmd, { text = true, env = M._env }):wait().stdout
 
 	vim.notify(output, vim.log.levels.DEBUG)
 end, {

@@ -8,6 +8,8 @@ function M.setup(opts)
 	M.langs = opts.langs and opts.langs or {}
 	M.load_paths = opts.load_paths and opts.load_paths or {}
 
+	M._env = opts.lang_path_env or {}
+
 	M._here = vim.fn.fnamemodify(debug.getinfo(1).source:sub(2), ":p:h")
 	M._run_by_name = M._here .. "/run_by_name.el"
 	M._run_by_number = M._here .. "/run_by_number.el"
@@ -267,7 +269,7 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.fn.system(cmd)
+	local output = vim.system(cmd, { text = true, env = M._env }):wait().stdout
 
 	vim.notify(output, vim.log.levels.DEBUG)
 
@@ -369,7 +371,7 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.fn.system(cmd)
+	local output =  = vim.system(cmd, { text = true, env = M._env }):wait().stdout
 
 	vim.notify(output, vim.log.levels.DEBUG)
 end, {

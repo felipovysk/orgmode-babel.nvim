@@ -89,20 +89,22 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 		local passed = not range
 		local name
 
-		for id, node in pairs(match) do
-			local row1, col1, row2, col2 = node:range()
-			local text = vim.api.nvim_buf_get_text(bufnr, row1, col1, row2, col2, {})[1]
-
-			if named_blocks_query.captures[id] == "block" and not passed then
-				if single and line1 - 1 > row1 and line1 - 1 < row2 then
-					passed = true
-				elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
-					passed = true
+		for id, nodes in pairs(match) do
+			for _, node in ipairs(nodes) do
+				local row1, col1, row2, col2 = node:range()
+				local text = vim.api.nvim_buf_get_text(bufnr, row1, col1, row2, col2, {})[1]
+	
+				if named_blocks_query.captures[id] == "block" and not passed then
+					if single and line1 - 1 > row1 and line1 - 1 < row2 then
+						passed = true
+					elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
+						passed = true
+					end
 				end
-			end
-
-			if named_blocks_query.captures[id] == "name" then
-				name = text
+	
+				if named_blocks_query.captures[id] == "name" then
+					name = text
+				end
 			end
 		end
 
@@ -130,14 +132,16 @@ function M.get_blocks_in_buffer(bufnr, line1, line2)
 	for _, match in unnamed_blocks_query:iter_matches(root, bufnr, 0, -1) do
 		local passed = not range
 
-		for id, node in pairs(match) do
-			local row1, _, row2 = node:range()
-
-			if unnamed_blocks_query.captures[id] == "block" and not passed then
-				if single and line1 - 1 > row1 and line1 - 1 < row2 then
-					passed = true
-				elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
-					passed = true
+		for id, nodes in pairs(match) do
+			for _, node in ipairs(nodes) do
+				local row1, _, row2 = node:range()
+	
+				if unnamed_blocks_query.captures[id] == "block" and not passed then
+					if single and line1 - 1 > row1 and line1 - 1 < row2 then
+						passed = true
+					elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
+						passed = true
+					end
 				end
 			end
 		end

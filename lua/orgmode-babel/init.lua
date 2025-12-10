@@ -8,7 +8,7 @@ function M.setup(opts)
 	M.langs = opts.langs and opts.langs or {}
 	M.load_paths = opts.load_paths and opts.load_paths or {}
 
-	M._env = opts.lang_path_env or {}
+	M._env = opts.lang_path_env and opts.lang_path_env or {}
 
 	M._here = vim.fn.fnamemodify(debug.getinfo(1).source:sub(2), ":p:h")
 	M._run_by_name = M._here .. "/run_by_name.el"
@@ -19,7 +19,7 @@ function M.setup(opts)
 	M._tangle_by_number = M._here .. "/tangle_by_number.el"
 
 	M._base_cmd = {
-		opts.emacs_bin or "emacs",
+		opts.emacs_bin and opts.emacs_bin or "emacs",
 		"--batch",
 		"--eval",
 		"(require 'org)",
@@ -269,9 +269,10 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.system(cmd, { text = true, env = M._env }):wait().stdout
+	local output = vim.system(cmd, { text = true, env = M._env }):wait()
 
-	vim.notify(output, vim.log.levels.DEBUG)
+	vim.notify(output.stdout, vim.log.levels.DEBUG)
+	vim.notify(output.stderr, vim.log.levels.DEBUG)
 
 	if not vim.bo[bufnr].modified then
 		vim.cmd(bufnr .. "bufdo edit")
@@ -371,9 +372,10 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.system(cmd, { text = true, env = M._env }):wait().stdout
+	local output = vim.system(cmd, { text = true, env = M._env }):wait()
 
-	vim.notify(output, vim.log.levels.DEBUG)
+	vim.notify(output.stdout, vim.log.levels.DEBUG)
+	vim.notify(output.stderr, vim.log.levels.DEBUG)
 end, {
 	range = "%",
 	bang = true,

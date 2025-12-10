@@ -17,7 +17,7 @@ function M.setup(opts)
 	M._tangle_by_number = M._here .. "/tangle_by_number.el"
 
 	M._base_cmd = {
-		"emacs",
+		opts.emacs_bin or "emacs",
 		"--batch",
 		"--eval",
 		"(require 'org)",

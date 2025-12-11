@@ -5,6 +5,8 @@ local M = {
 function M.setup(opts)
 	opts = opts or {}
 
+	local lang_vars = opts.lang_vars and opts.lang_vars or {}
+
 	M.langs = opts.langs and opts.langs or {}
 	M.load_paths = opts.load_paths and opts.load_paths or {}
 
@@ -44,6 +46,8 @@ function M.setup(opts)
 			return acc .. "(" .. value .. " . t) "
 		end, "") .. "))",
 	})
+
+	vim.list_extend(M._base_cmd, lang_vars)
 end
 
 local named_blocks_query = vim.treesitter.query.parse(

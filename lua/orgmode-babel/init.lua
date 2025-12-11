@@ -158,10 +158,10 @@ function M.get_blocks_in_buffer(bufnr, line1, line2)
 end
 
 local function notify(out)
-	if out.stdout ~= nil then
+	if out.stdout ~= nil and out.stdout ~= "" then
 		print(out.stdout) -- vim.notify fails in a fast event context
 	end
-	if out.stderr ~= nil then
+	if out.stderr ~= nil and out.stdout ~= "" and out.signal ~= 0 then
 		error(out.stderr) -- same here
 	end
 end

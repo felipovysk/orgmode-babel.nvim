@@ -97,7 +97,7 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 			for _, node in ipairs(nodes) do
 				local row1, col1, row2, col2 = node:range()
 				local text = vim.api.nvim_buf_get_text(bufnr, row1, col1, row2, col2, {})[1]
-	
+
 				if named_blocks_query.captures[id] == "block" and not passed then
 					if single and line1 - 1 > row1 and line1 - 1 < row2 then
 						passed = true
@@ -105,7 +105,7 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 						passed = true
 					end
 				end
-	
+
 				if named_blocks_query.captures[id] == "name" then
 					name = text
 				end
@@ -139,7 +139,7 @@ function M.get_blocks_in_buffer(bufnr, line1, line2)
 		for id, nodes in pairs(match) do
 			for _, node in ipairs(nodes) do
 				local row1, _, row2 = node:range()
-	
+
 				if unnamed_blocks_query.captures[id] == "block" and not passed then
 					if single and line1 - 1 > row1 and line1 - 1 < row2 then
 						passed = true
@@ -271,9 +271,14 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.fn.system(cmd)
-
-	vim.notify(output, vim.log.levels.DEBUG)
+	vim.system(cmd, {}, function(out)
+		if out.stdout ~= nil then
+			vim.notify(out.stdout, vim.log.levels.DEBUG)
+		end
+		if out.stderr ~= nil then
+			vim.notify(out.stderr, vim.log.levels.ERROR)
+		end
+	end)
 
 	if not vim.bo[bufnr].modified then
 		vim.cmd(bufnr .. "bufdo edit")
@@ -373,9 +378,14 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	local output = vim.fn.system(cmd)
-
-	vim.notify(output, vim.log.levels.DEBUG)
+	vim.system(cmd, {}, function(out)
+		if out.stdout ~= nil then
+			vim.notify(out.stdout, vim.log.levels.DEBUG)
+		end
+		if out.stderr ~= nil then
+			vim.notify(out.stderr, vim.log.levels.ERROR)
+		end
+	end)
 end, {
 	range = "%",
 	bang = true,

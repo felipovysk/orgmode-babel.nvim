@@ -48,34 +48,32 @@ function M.setup(opts)
 	})
 
 	vim.list_extend(M._base_cmd, lang_vars)
-end
-
-local named_blocks_query = vim.treesitter.query.parse(
-	"org",
-	[[
-  (body
-    (block
-      directive: (directive
-        name: (expr) (#eq? "name")
-        value: (value) @name
+	M._unnamed_blocks_query = vim.treesitter.query.parse(
+		"org",
+		[[
+      (body
+        (block
+          name: (expr) (#eq? "src")
+        ) @block
       )
+    ]]
+	)
+	M._named_blocks_query = vim.treesitter.query.parse(
+		"org",
+		[[
+      (body
+        (block
+          directive: (directive
+            name: (expr) (#eq? "name")
+            value: (value) @name
+          )
 
-      name: (expr) (#eq? "src")
-    ) @block
-  )
-]]
-)
-
-local unnamed_blocks_query = vim.treesitter.query.parse(
-	"org",
-	[[
-  (body
-    (block
-      name: (expr) (#eq? "src")
-    ) @block
-  )
-]]
-)
+          name: (expr) (#eq? "src")
+        ) @block
+      )
+    ]]
+	)
+end
 
 function M.get_names_in_buffer(bufnr, line1, line2)
 	bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -89,7 +87,7 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 	local range = line1 ~= nil and line2 ~= nil
 	local single = range and line1 == line2
 
-	for _, match in named_blocks_query:iter_matches(root, bufnr, 0, -1) do
+	for _, match in M._named_blocks_query:iter_matches(root, bufnr, 0, -1) do
 		local passed = not range
 		local name
 
@@ -98,7 +96,7 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 				local row1, col1, row2, col2 = node:range()
 				local text = vim.api.nvim_buf_get_text(bufnr, row1, col1, row2, col2, {})[1]
 
-				if named_blocks_query.captures[id] == "block" and not passed then
+				if M._named_blocks_query.captures[id] == "block" and not passed then
 					if single and line1 - 1 > row1 and line1 - 1 < row2 then
 						passed = true
 					elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
@@ -106,7 +104,7 @@ function M.get_names_in_buffer(bufnr, line1, line2)
 					end
 				end
 
-				if named_blocks_query.captures[id] == "name" then
+				if M._named_blocks_query.captures[id] == "name" then
 					name = text
 				end
 			end
@@ -133,14 +131,14 @@ function M.get_blocks_in_buffer(bufnr, line1, line2)
 
 	local encountered = 0
 
-	for _, match in unnamed_blocks_query:iter_matches(root, bufnr, 0, -1) do
+	for _, match in M._unnamed_blocks_query:iter_matches(root, bufnr, 0, -1) do
 		local passed = not range
 
 		for id, nodes in pairs(match) do
 			for _, node in ipairs(nodes) do
 				local row1, _, row2 = node:range()
 
-				if unnamed_blocks_query.captures[id] == "block" and not passed then
+				if M._unnamed_blocks_query.captures[id] == "block" and not passed then
 					if single and line1 - 1 > row1 and line1 - 1 < row2 then
 						passed = true
 					elseif not single and line1 - 1 <= row1 and row2 <= line2 - 1 then
@@ -157,6 +155,15 @@ function M.get_blocks_in_buffer(bufnr, line1, line2)
 		encountered = encountered + 1
 	end
 	return indexes
+end
+
+local function notify(out)
+	if out.stdout ~= nil then
+		print(out.stdout) -- vim.notify fails in a fast event context
+	end
+	if out.stderr ~= nil then
+		error(out.stderr) -- same here
+	end
 end
 
 vim.api.nvim_create_user_command("OrgExecute", function(el)
@@ -269,16 +276,7 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	vim.list_extend(cmd, parameters)
 
-	-- vim.notify(cmd, vim.log.levels.DEBUG)
-
-	vim.system(cmd, {}, function(out)
-		if out.stdout ~= nil then
-			vim.notify(out.stdout, vim.log.levels.DEBUG)
-		end
-		if out.stderr ~= nil then
-			vim.notify(out.stderr, vim.log.levels.ERROR)
-		end
-	end)
+	vim.system(cmd, {}, notify)
 
 	if not vim.bo[bufnr].modified then
 		vim.cmd(bufnr .. "bufdo edit")
@@ -378,14 +376,7 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	vim.system(cmd, {}, function(out)
-		if out.stdout ~= nil then
-			vim.notify(out.stdout, vim.log.levels.DEBUG)
-		end
-		if out.stderr ~= nil then
-			vim.notify(out.stderr, vim.log.levels.ERROR)
-		end
-	end)
+	vim.system(cmd, {}, notify)
 end, {
 	range = "%",
 	bang = true,

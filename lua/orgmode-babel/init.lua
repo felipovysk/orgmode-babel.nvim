@@ -166,6 +166,14 @@ local function notify(out)
 	end
 end
 
+local function notify_and(fn)
+	local function fn2(out)
+		notify(out)
+		fn()
+	end
+	return fn2
+end
+
 vim.api.nvim_create_user_command("OrgExecute", function(el)
 	local line1 = el.line1
 	local line2 = el.line2
@@ -276,11 +284,13 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	vim.list_extend(cmd, parameters)
 
-	vim.system(cmd, {}, notify)
-
-	if not vim.bo[bufnr].modified then
-		vim.cmd(bufnr .. "bufdo edit")
+	local bufdo_edit = function()
+		if not vim.bo[bufnr].modified then
+			vim.cmd(bufnr .. "bufdo edit")
+		end
 	end
+
+	vim.system(cmd, {}, notify_and(bufdo_edit))
 end, {
 	nargs = "?",
 	range = "%",

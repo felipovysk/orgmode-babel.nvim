@@ -159,19 +159,11 @@ end
 
 local function notify(out)
 	if out.stdout ~= nil and out.stdout ~= "" then
-		print(out.stdout) -- vim.notify fails in a fast event context
+		vim.notify(out.stdout, vim.log.levels.INFO)
 	end
-	if out.stderr ~= nil and out.stdout ~= "" and out.signal ~= 0 then
-		error(out.stderr) -- same here
+	if out.stderr ~= nil and out.stdout ~= "" then
+		vim.notify(out.stderr, vim.log.levels.ERROR)
 	end
-end
-
-local function notify_and(fn)
-	local function fn2(out)
-		notify(out)
-		fn()
-	end
-	return fn2
 end
 
 vim.api.nvim_create_user_command("OrgExecute", function(el)
@@ -284,13 +276,13 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	vim.list_extend(cmd, parameters)
 
-	local bufdo_edit = function()
-		if not vim.bo[bufnr].modified then
-			vim.cmd(bufnr .. "bufdo edit")
-		end
-	end
+	local output = vim.system(cmd, {})
 
-	vim.system(cmd, {}, notify_and(bufdo_edit))
+	notify(output)
+
+	if not vim.bo[bufnr].modified then
+		vim.cmd(bufnr .. "bufdo edit")
+	end
 end, {
 	nargs = "?",
 	range = "%",
@@ -386,7 +378,9 @@ vim.api.nvim_create_user_command("OrgTangle", function(el)
 
 	-- vim.notify(cmd, vim.log.levels.DEBUG)
 
-	vim.system(cmd, {}, notify)
+	local output = vim.system(cmd, {}):wait()
+
+	notify(output)
 end, {
 	range = "%",
 	bang = true,

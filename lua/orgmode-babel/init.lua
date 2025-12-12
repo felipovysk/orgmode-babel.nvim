@@ -276,12 +276,11 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	vim.list_extend(cmd, parameters)
 
-	local output = vim.system(cmd, {})
+	local output = vim.system(cmd, {}):wait()
 
 	notify(output)
 
-	vim.cmd(bufnr .. "bufdo write!")
-	vim.cmd(bufnr .. "bufdo edit")
+	vim.cmd("checktime")
 end, {
 	nargs = "?",
 	range = "%",

@@ -280,7 +280,8 @@ vim.api.nvim_create_user_command("OrgExecute", function(el)
 
 	notify(output)
 
-	vim.cmd("checktime")
+	vim.cmd(bufnr .. "bufdo write!")
+	vim.cmd(bufnr .. "bufdo edit")
 end, {
 	nargs = "?",
 	range = "%",
